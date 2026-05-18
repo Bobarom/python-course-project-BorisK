@@ -15,7 +15,7 @@ class Tab(models.Model):
     song = models.CharField(max_length=200)
     tuning = models.CharField(max_length=50, default='Standard (EADGBe)')
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='beginner')
-    content = models.TextField()  # the actual tab notation
+    content = models.TextField()
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -40,7 +40,7 @@ class Favorite(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'tab')  # prevents duplicate favorites
+        unique_together = ('user', 'tab')
 
     def __str__(self):
         return f"{self.user.username} ♥ {self.tab.title}"
