@@ -14,43 +14,42 @@ from rich.spinner import Spinner
 from rich import box
 import time
 
-# ── Config ────────────────────────────────────────────────────────────────────
-
 BASE_URL = "http://127.0.0.1:8000/api"
 console = Console()
 
-# Session state
 session = {
     "token": None,
     "username": None,
 }
 
-# ── Theme helpers ──────────────────────────────────────────────────────────────
-
 LOGO = r"""
- ██████╗ ██╗████████╗    ████████╗ █████╗ ██████╗ ███████╗
-██╔════╝ ██║╚══██╔══╝       ██╔══╝██╔══██╗██╔══██╗██╔════╝
-██║  ███╗██║   ██║          ██║   ███████║██████╔╝███████╗
-██║   ██║██║   ██║          ██║   ██╔══██║██╔══██╗╚════██║
-╚██████╔╝██║   ██║          ██║   ██║  ██║██████╔╝███████║
- ╚═════╝ ╚═╝   ╚═╝          ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝
+░▒▓████████▓▒░▒▓██████▓▒░░▒▓███████▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░░▒▓██████████████▓▒░  
+   ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+   ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+   ░▒▓█▓▒░  ░▒▓████████▓▒░▒▓███████▓▒░  ░▒▓█▓▒░   ░▒▓██████▓▒░ ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+   ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+   ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+   ░▒▓█▓▒░  ░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░  ░▒▓█▓▒░   ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+                                                                                                  
+                                                                                                  
+                                                                                                  
 """
 
 DIFFICULTY_COLORS = {
-    "beginner":     "green",
+    "beginner":    "green",
     "intermediate": "yellow",
     "advanced":     "red",
 }
 
 DIFFICULTY_ICONS = {
-    "beginner":     "○○○",
+    "beginner":    "○○○",
     "intermediate": "●●○",
     "advanced":     "●●●",
 }
 
 def difficulty_badge(level: str) -> Text:
     color = DIFFICULTY_COLORS.get(level, "white")
-    icon  = DIFFICULTY_ICONS.get(level, "?")
+    icon = DIFFICULTY_ICONS.get(level, "?")
     t = Text()
     t.append(f" {icon} {level.upper()} ", style=f"bold {color} on grey19")
     return t
@@ -66,80 +65,79 @@ def api(method: str, path: str, **kwargs):
         r = getattr(requests, method)(url, **kwargs)
         return r
     except requests.ConnectionError:
-        console.print("\n[bold red]✗[/] Cannot reach the server. Is Django running?\n")
+        console.print("\n[bold red]Error[/] Cannot reach the server.\n")
         sys.exit(1)
 
-def loading(msg: str = "Loading…"):
-    return Live(Spinner("dots", text=f"[dim]{msg}[/]"), console=console, transient=True)
+def loading(msg: str = "Loading..."):
+    return Live(Spinner("dots", text = f"[dim]{msg}[/]"), console = console, transient=True)
 
-# ── Screens ───────────────────────────────────────────────────────────────────
+
 
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 def show_logo():
     clear()
-    console.print(Text(LOGO, style="bold dark_orange"), justify="center")
+    console.print(Text(LOGO, style="bold bright_blue"), justify="center")
     console.print(
-        Align.center(Text("the open-source guitar tab community", style="italic dim"))
+        Align.center(Text("the guitar tab app for terminal-heads", style="italic dim"))
     )
     console.print()
 
 def show_banner():
-    """Compact header shown on inner screens."""
     t = Text()
-    t.append("🎸 GIT TABS", style="bold dark_orange")
+    t.append("TabTerm", style="bold bright_blue")
     if session["username"]:
         t.append(f"  ·  logged in as ", style="dim")
         t.append(session["username"], style="bold cyan")
-    console.print(Rule(t, style="dark_orange"))
+    console.print(Rule(t, style="bright_blue"))
     console.print()
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
+
 
 def screen_login():
     show_logo()
-    console.print(Panel("[bold]Log in to your account[/]", border_style="dark_orange", width=44))
+    console.print(Panel("[bold]Log in to your account[/]", border_style="bright_blue", width=44))
     username = Prompt.ask("[cyan]Username[/]")
     password = Prompt.ask("[cyan]Password[/]", password=True)
 
-    with loading("Authenticating…"):
+    with loading("Authenticating..."):
         r = api("post", "/auth/login/", json={"username": username, "password": password})
 
     if r.status_code == 200:
         data = r.json()
-        session["token"]    = data["token"]
+        session["token"] = data["token"]
         session["username"] = data["username"]
-        console.print(f"\n[bold green]✓[/] Welcome back, [bold cyan]{session['username']}[/]!\n")
+        console.print(f"\n[bold green]Success[/] Welcome back, [bold cyan]{session['username']}[/]!\n")
         time.sleep(1)
         screen_main_menu()
     else:
-        console.print("\n[bold red]✗ Invalid credentials.[/]\n")
+        console.print("\n[bold red]Error: Invalid creditensials.[/]\n")
         time.sleep(1)
         screen_auth_menu()
 
 def screen_register():
     show_logo()
-    console.print(Panel("[bold]Create an account[/]", border_style="dark_orange", width=44))
+    console.print(Panel("[bold]Create an account[/]", border_style="bright_blue", width=44))
     username = Prompt.ask("[cyan]Username[/]")
-    email    = Prompt.ask("[cyan]Email[/]")
+    email = Prompt.ask("[cyan]Email[/]")
     password = Prompt.ask("[cyan]Password[/]", password=True)
 
-    with loading("Creating account…"):
+    with loading("Creating account..."):
         r = api("post", "/auth/register/", json={
             "username": username, "email": email, "password": password
         })
 
     if r.status_code == 200:
         data = r.json()
-        session["token"]    = data["token"]
+        session["token"] = data["token"]
         session["username"] = data["username"]
-        console.print(f"\n[bold green]✓[/] Account created! Welcome, [bold cyan]{session['username']}[/]!\n")
+        console.print(f"\n[bold green]Success[/] Account created! Welcome, [bold cyan]{session['username']}[/]!\n")
         time.sleep(1)
         screen_main_menu()
     else:
         errors = r.json()
-        console.print(f"\n[bold red]✗ Error:[/] {errors}\n")
+        console.print(f"\n[bold red]Error: [/]{errors}\n")
         time.sleep(1.5)
         screen_auth_menu()
 
@@ -147,15 +145,15 @@ def screen_auth_menu():
     show_logo()
     console.print(Align.center(
         Panel(
-            "[1] Login\n[2] Register\n[3] Browse tabs  [dim](no login needed)[/]\n[Q] Quit",
-            title="[bold dark_orange]Menu[/]",
-            border_style="dark_orange",
+            "[1] Login\n[2] Register\n[3] Browse tabs\n[Q] Quit",
+            title="[bold bright_blue]Menu[/]",
+            border_style="bright_blue",
             width=36,
         )
     ))
     console.print()
     choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","q","Q"], default="1")
-    if   choice == "1": screen_login()
+    if choice == "1": screen_login()
     elif choice == "2": screen_register()
     elif choice == "3": screen_browse_tabs()
     else: goodbye()
@@ -172,14 +170,14 @@ def screen_main_menu():
             "[5] My favorites\n"
             "[6] My profile\n"
             "[Q] Logout",
-            title="[bold dark_orange]Main Menu[/]",
-            border_style="dark_orange",
+            title="[bold bright_blue]Main Menu[/]",
+            border_style="bright_blue",
             width=36,
         )
     ))
     console.print()
     choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","4","5","6","q","Q"], default="1")
-    if   choice == "1": screen_browse_tabs()
+    if choice == "1": screen_browse_tabs()
     elif choice == "2": screen_search_tabs()
     elif choice == "3": screen_view_tab_by_id()
     elif choice == "4": screen_create_tab()
@@ -190,28 +188,27 @@ def screen_main_menu():
         session["username"] = None
         screen_auth_menu()
 
-# ── Tab List ──────────────────────────────────────────────────────────────────
 
-def render_tabs_table(tabs: list, title: str = "Guitar Tabs"):
+def render_tabs_table(tabs: list, title: str = "TabTerm"):
     if not tabs:
         console.print("[dim]No tabs found.[/]\n")
         return
-
+    
     table = Table(
-        title=f"[bold dark_orange]{title}[/]",
+        title=f"[bold bright_blue]{title}[/]",
         box=box.SIMPLE_HEAD,
         border_style="grey30",
-        header_style="bold dark_orange",
+        header_style="bold bright_blue",
         show_lines=False,
         expand=True,
     )
-    table.add_column("#",        style="dim",         width=4,  justify="right")
-    table.add_column("Title",    style="bold white",  ratio=3)
-    table.add_column("Artist",   style="cyan",        ratio=2)
-    table.add_column("Tuning",   style="dim",         ratio=2)
-    table.add_column("Level",    ratio=2)
-    table.add_column("Author",   style="dim magenta", ratio=2)
-    table.add_column("♥",        style="red",         width=5,  justify="center")
+    table.add_column("#", style = "dim", width=4, justify="right")
+    table.add_column("Title", style = "bold white", ratio=3)
+    table.add_column("Artist", style = "cyan", ratio=2)
+    table.add_column("Tuning", style = "dim", ratio=2)
+    table.add_column("Level", ratio=2)
+    table.add_column("Author", style="dim magenta", ratio=2)
+    table.add_column("<3", style="bold red", width=5, justify="center")
 
     for tab in tabs:
         table.add_row(
@@ -223,13 +220,13 @@ def render_tabs_table(tabs: list, title: str = "Guitar Tabs"):
             tab["author"],
             str(tab["favorite_count"]),
         )
-
+    
     console.print(table)
 
 def screen_browse_tabs(params: dict = None):
     clear()
     show_banner()
-    with loading("Fetching tabs…"):
+    with loading("Fetching tabs..."):
         r = api("get", "/tabs/", params=params or {})
     tabs = r.json()
     render_tabs_table(tabs, title="All Tabs")
@@ -239,19 +236,19 @@ def screen_search_tabs():
     clear()
     show_banner()
     console.print("[bold]Search tabs[/]\n")
-    query      = Prompt.ask("[cyan]Search[/] (artist, song, title)")
+    query = Prompt.ask("[cyan]Search[/] (artist, song, title)")
     difficulty = Prompt.ask(
         "[cyan]Difficulty[/]",
-        choices=["", "beginner","intermediate","advanced"],
+        choises=["", "beginner","intermediate","advanced"],
         default="",
         show_default=False,
         show_choices=True,
     )
     params = {}
-    if query:      params["search"]     = query
+    if query: params["search"] = query
     if difficulty: params["difficulty"] = difficulty
 
-    with loading("Searching…"):
+    with loading("Searching..."):
         r = api("get", "/tabs/", params=params)
     tabs = r.json()
     render_tabs_table(tabs, title=f'Results for "{query}"')
@@ -259,20 +256,20 @@ def screen_search_tabs():
 
 def _tab_list_actions():
     console.print()
-    console.print("[dim][V] View a tab   [B] Back to menu[/]")
+    console.print("[dim][V] View a a tab   [B] Back to menu[/]")
     choice = Prompt.ask("[bold]>[/]", choices=["v","V","b","B"], default="b")
     if choice.lower() == "v":
         screen_view_tab_by_id()
     else:
         _back_to_menu()
 
-# ── Tab Detail ────────────────────────────────────────────────────────────────
+
 
 def screen_view_tab_by_id():
     clear()
     show_banner()
     tab_id = Prompt.ask("[cyan]Enter Tab ID[/]")
-    with loading("Loading tab…"):
+    with loading("Loading tab..."):
         r = api("get", f"/tabs/{tab_id}/")
     if r.status_code == 404:
         console.print("[red]Tab not found.[/]\n")
@@ -285,28 +282,27 @@ def screen_view_tab(tab: dict):
     clear()
     show_banner()
 
-    # Header info
     info = Table.grid(padding=(0,2))
     info.add_column(style="dim", justify="right")
     info.add_column(style="white")
-    info.add_row("Artist",   f"[bold cyan]{tab['artist']}[/]")
-    info.add_row("Song",     tab["song"])
-    info.add_row("Tuning",   f"[yellow]{tab['tuning']}[/]")
-    info.add_row("Level",    difficulty_badge(tab["difficulty"]))
-    info.add_row("Author",   f"[magenta]{tab['author']}[/]")
-    info.add_row("Favorites",f"[red]♥ {tab['favorite_count']}[/]")
+    info.add_row("Artist", f"[bold cyan]{tab['artist']}[/]")
+    info.add_row("Song", tab["song"])
+    info.add_row("Tuning", f"[yellow]{tab['tuning']}[/]")
+    info.add_row("Level", difficulty_badge(tab["difficulty"]))
+    info.add_row("Author", f"[magenta]{tab['author']}[/]")
+    info.add_row("Favorites", f"[red]<3 {tab['favorite_count']}[/]")
 
     console.print(Panel(
         info,
-        title=f"[bold dark_orange]{tab['title']}[/]",
-        border_style="dark_orange",
+        title=f"[bold bright_blue]{tab['title']}[/]",
+        border_style="bright_blue",
         subtitle=f"[dim]id:{tab['id']}[/]",
     ))
 
     if tab.get("description"):
         console.print(f"\n[italic dim]{tab['description']}[/]\n")
 
-    # Tab content — monospace box
+    
     console.print(Panel(
         Text(tab["content"], style="bold green on grey7"),
         title="[bold]Tab[/]",
@@ -314,10 +310,10 @@ def screen_view_tab(tab: dict):
         padding=(1, 2),
     ))
 
-    # Comments
+    
     comments = tab.get("comments", [])
     if comments:
-        console.print(f"\n[bold dark_orange]Comments[/] [dim]({len(comments)})[/]\n")
+        console.print(f"\n[bold bright_blue]Comments[/] [dim]({len(comments)})[/]\n")
         for c in comments:
             console.print(
                 f"  [magenta]{c['author']}[/] [dim]{c['created_at'][:10]}[/]"
@@ -326,7 +322,7 @@ def screen_view_tab(tab: dict):
     else:
         console.print("\n[dim]No comments yet. Be the first![/]\n")
 
-    # Actions
+    
     actions = ["[B] Back"]
     if session["token"]:
         actions += ["[C] Comment", "[F] Toggle favorite"]
@@ -348,12 +344,12 @@ def screen_view_tab(tab: dict):
     elif c == "d": action_delete_tab(tab)
     else: _back_to_menu()
 
-# ── Create / Edit Tab ─────────────────────────────────────────────────────────
+
 
 def screen_create_tab():
     clear()
     show_banner()
-    console.print(Panel("[bold]Create a new tab[/]", border_style="dark_orange", width=44))
+    console.print(Panel("[bold]Create a new tab[/]", border_style="bright_blue", width=44))
     console.print("[dim]Fill in the details below. For the tab content, use standard ASCII tab notation.[/]\n")
 
     title       = Prompt.ask("[cyan]Title[/]")
@@ -398,7 +394,7 @@ def screen_create_tab():
 def screen_edit_tab(tab: dict):
     clear()
     show_banner()
-    console.print(Panel(f"[bold]Editing:[/] {tab['title']}", border_style="dark_orange", width=50))
+    console.print(Panel(f"[bold]Editing:[/] {tab['title']}", border_style="bright_blue", width=50))
     console.print("[dim]Leave blank to keep existing value.[/]\n")
 
     title      = Prompt.ask("[cyan]Title[/]",      default=tab["title"])
@@ -453,12 +449,12 @@ def action_delete_tab(tab: dict):
     time.sleep(1)
     screen_browse_tabs()
 
-# ── Comments ──────────────────────────────────────────────────────────────────
+
 
 def screen_add_comment(tab: dict):
     clear()
     show_banner()
-    console.print(f"[bold]Add comment on:[/] [dark_orange]{tab['title']}[/]\n")
+    console.print(f"[bold]Add comment on:[/] [bright_blue]{tab['title']}[/]\n")
     content = Prompt.ask("[cyan]Your comment[/]")
 
     with loading("Posting…"):
@@ -474,7 +470,7 @@ def screen_add_comment(tab: dict):
     r2 = api("get", f"/tabs/{tab['id']}/")
     screen_view_tab(r2.json())
 
-# ── Favorites ─────────────────────────────────────────────────────────────────
+
 
 def action_toggle_favorite(tab: dict):
     with loading("Updating…"):
@@ -496,7 +492,7 @@ def screen_favorites():
     render_tabs_table(tabs, title="♥ My Favorites")
     _tab_list_actions()
 
-# ── Profile ───────────────────────────────────────────────────────────────────
+
 
 def screen_profile():
     clear()
@@ -515,9 +511,9 @@ def screen_profile():
     grid.add_row("Username",  f"[bold cyan]{user['username']}[/]")
     grid.add_row("Email",     user.get("email","—"))
     grid.add_row("Joined",    user["date_joined"][:10])
-    grid.add_row("Tabs",      f"[dark_orange]{len(my_tabs)}[/]")
+    grid.add_row("Tabs",      f"[bright_blue]{len(my_tabs)}[/]")
 
-    console.print(Panel(grid, title="[bold dark_orange]My Profile[/]", border_style="dark_orange", width=50))
+    console.print(Panel(grid, title="[bold bright_blue]My Profile[/]", border_style="bright_blue", width=50))
 
     if my_tabs:
         console.print()
@@ -528,7 +524,7 @@ def screen_profile():
     Prompt.ask("[bold]>[/]", choices=["b","B"], default="b")
     screen_main_menu()
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def _back_to_menu():
     if session["token"]:
@@ -539,11 +535,11 @@ def _back_to_menu():
 def goodbye():
     clear()
     console.print(Align.center(
-        Text("\n🎸  Keep strumming.  \n", style="bold dark_orange")
+        Text("\n  Keep strumming  \n", style="bold bright_blue")
     ))
     sys.exit(0)
 
-# ── Entry point ───────────────────────────────────────────────────────────────
+
 
 if __name__ == "__main__":
     try:
