@@ -12,6 +12,7 @@ from rich.align import Align
 from rich.live import Live
 from rich.spinner import Spinner
 from rich import box
+import click
 import time
 
 BASE_URL = "http://127.0.0.1:8000/api"
@@ -140,50 +141,116 @@ def screen_register():
 
 def screen_auth_menu():
     show_logo()
-    console.print(Align.center(
-        Panel(
-            "[1] Login\n[2] Register\n[3] Browse tabs\n[Q] Quit",
-            title="[bold bright_blue]Menu[/]",
-            border_style="bright_blue",
-            width=36,
-        )
-    ))
-    console.print()
-    choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","q","Q"], default="1")
-    if choice == "1": screen_login()
-    elif choice == "2": screen_register()
-    elif choice == "3": screen_browse_tabs()
+    # console.print(Align.center(
+    #     Panel(
+    #         "[1] Login\n[2] Register\n[3] Browse tabs\n[Q] Quit",
+    #         title="[bold bright_blue]Menu[/]",
+    #         border_style="bright_blue",
+    #         width=36,
+    #     )
+    # ))
+    # console.print()
+    # choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","q","Q"], default="1")
+
+    options = [
+        "Login",
+        "Register",
+        "Browse tabs",
+        "Quit"
+    ]
+
+    choice = get_menu_selection(options)
+
+    if choice == 1: screen_login()
+    elif choice == 2: screen_register()
+    elif choice == 3: screen_browse_tabs()
     else: goodbye()
+
+def generate_menu_panel(options, index):
+    menu_content = Text()
+
+    for i, option in enumerate(options):
+        if i == index:
+            menu_content.append(f" >> {option}\n", style="yellow")
+        else:
+            menu_content.append(f"    {option}\n")
+
+
+    menu_content.rstrip()
+
+    return Panel(
+        menu_content,
+        title="[bold bright_blue]Main Menu[/]",
+        border_style="bright_blue",
+        width=28,
+    )
+
+def get_menu_selection(options):
+    index = 0
+
+    with Live(Align.center(generate_menu_panel(options, index)), auto_refresh=False) as live:
+        while True:
+            key = click.getchar()
+
+
+            if key == '\x1b[A' or key == 'H':
+                index = (index - 1) % len(options)
+            elif key == '\x1b[B' or key == 'P':
+                index = (index + 1) % len(options)
+            elif key in ('\r', '\n'):
+                break
+
+            live.update(Align.center(generate_menu_panel(options, index)), refresh=True)
+
+    return index + 1
+
+
 
 def screen_main_menu():
     show_logo()
     show_banner()
-    console.print(Align.center(
-        Panel(
-            "[1] Browse tabs\n"
-            "[2] Search tabs\n"
-            "[3] View a tab\n"
-            "[4] Create a tab\n"
-            "[5] My favorites\n"
-            "[6] My profile\n"
-            "[Q] Logout",
-            title="[bold bright_blue]Main Menu[/]",
-            border_style="bright_blue",
-            width=36,
-        )
-    ))
-    console.print()
-    choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","4","5","6","q","Q"], default="1")
-    if choice == "1": screen_browse_tabs()
-    elif choice == "2": screen_search_tabs()
-    elif choice == "3": screen_view_tab_by_id()
-    elif choice == "4": screen_create_tab()
-    elif choice == "5": screen_favorites()
-    elif choice == "6": screen_profile()
-    else:
+    # console.print(Align.center(
+    #     Panel(
+    #         "[1] Browse tabs\n"
+    #         "[2] Search tabs\n"
+    #         "[3] View a tab\n"
+    #         "[4] Create a tab\n"
+    #         "[5] My favorites\n"
+    #         "[6] My profile\n"
+    #         "[Q] Logout",
+    #         title="[bold bright_blue]Main Menu[/]",
+    #         border_style="bright_blue",
+    #         width=36,
+    #     )
+    # ))
+    # console.print()
+    # choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","4","5","6","q","Q"], default="1")
+
+    options = [
+        "Browse tabs",
+        "Search tabs",
+        "View a tab",
+        "Create a tab",
+        "My favorites",
+        "My profile",
+        "Logout",
+        "Quit"
+    ]
+
+    choice = get_menu_selection(options)
+
+    if choice == 1: screen_browse_tabs()
+    elif choice == 2: screen_search_tabs()
+    elif choice == 3: screen_view_tab_by_id()
+    elif choice == 4: screen_create_tab()
+    elif choice == 5: screen_favorites()
+    elif choice == 6: screen_profile()
+    elif choice == 7:
         session["token"] = None
         session["username"] = None
         screen_auth_menu()
+    else:
+        goodbye()
 
 
 def render_tabs_table(tabs: list, title: str = "TabTerm"):
@@ -236,7 +303,7 @@ def screen_search_tabs():
     query = Prompt.ask("[cyan]Search[/] (artist, song, title)")
     difficulty = Prompt.ask(
         "[cyan]Difficulty[/]",
-        choises=["", "beginner","intermediate","advanced"],
+        choices=["", "beginner","intermediate","advanced"],
         default="",
         show_default=False,
         show_choices=True,
