@@ -119,7 +119,14 @@ def screen_register():
     console.print(Panel("[bold]Create an account[/]", border_style="bright_blue", width=44))
     username = Prompt.ask("[cyan]Username[/]")
     email = Prompt.ask("[cyan]Email[/]")
-    password = Prompt.ask("[cyan]Password[/]", password=True)
+    
+    while True:
+        password = Prompt.ask("[cyan]Password[/]", password=True)
+
+        if len(password) >= 8:
+            break
+    
+        console.print("[red]Password must be at least 8 characters long![/]")
 
     with loading("Creating account..."):
         r = api("post", "/auth/register/", json={
