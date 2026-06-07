@@ -236,7 +236,6 @@ def screen_main_menu():
     options = [
         "Browse tabs",
         "Search tabs",
-        "View a tab",
         "Create a tab",
         "My favorites",
         "My profile",
@@ -248,31 +247,30 @@ def screen_main_menu():
 
     if choice == 1: screen_browse_tabs()
     elif choice == 2: screen_search_tabs()
-    elif choice == 3: screen_view_tab_by_id()
-    elif choice == 4: screen_create_tab()
-    elif choice == 5: screen_favorites()
-    elif choice == 6: screen_profile()
-    elif choice == 7:
+    elif choice == 3: screen_create_tab()
+    elif choice == 4: screen_favorites()
+    elif choice == 5: screen_profile()
+    elif choice == 6:
         session["token"] = None
         session["username"] = None
         screen_auth_menu()
     else:
         goodbye()
 
-
-def render_tabs_table(tabs: list, title: str = "TabTerm"):
-    if not tabs:
-        console.print("[dim]No tabs found.[/]\n")
-        return
+def generate_table_menu_panel(tabs: list, index):
+    menu_content = Text()
+    arro = ""
     
+
     table = Table(
-        title=f"[bold bright_blue]{title}[/]",
+        title=f"[bold bright_blue]{"All Tabs[dim] · use arrow keys to navigate, Esc to return to menu"}[/]",
         box=box.SIMPLE_HEAD,
         border_style="grey30",
         header_style="bold bright_blue",
         show_lines=False,
         expand=True,
     )
+    table.add_column("    ", style = "dim", width=4, justify="right")
     table.add_column("#", style = "dim", width=4, justify="right")
     table.add_column("Title", style = "bold white", ratio=3)
     table.add_column("Artist", style = "cyan", ratio=2)
@@ -282,7 +280,12 @@ def render_tabs_table(tabs: list, title: str = "TabTerm"):
     table.add_column("<3", style="bold red", width=5, justify="center")
 
     for tab in tabs:
+        if tab["id"] == index+1:
+            arro = ">>  "
+        else:
+            arro = "    "
         table.add_row(
+            arro,
             str(tab["id"]),
             tab["title"],
             tab["artist"],
@@ -292,7 +295,41 @@ def render_tabs_table(tabs: list, title: str = "TabTerm"):
             str(tab["favorite_count"]),
         )
     
-    console.print(table)
+
+    return table
+
+def get_table_menu_selection(tabs: list):
+    index = 0
+
+    with Live(generate_table_menu_panel(tabs, index), auto_refresh=False) as live:
+        while True:
+            key = click.getchar()
+
+
+            if key == '\x1b[A' or key == 'H':
+                index = (index - 1) % len(tabs)
+            elif key == '\x1b[B' or key == 'P':
+                index = (index + 1) % len(tabs)
+            elif key in ('\r', '\n'):
+                break
+            elif key == '\x1b':
+                return -1
+
+            live.update(generate_table_menu_panel(tabs, index), refresh=True)
+
+    return index+1
+
+def render_tabs_table(tabs: list, title: str = "TabTerm"):
+    if not tabs:
+        console.print("[dim]No tabs found.[/]\n")
+        return
+    
+    tab_id = get_table_menu_selection(tabs)
+
+    if tab_id == -1:
+        _back_to_menu()
+    
+    screen_view_tab_by_id(tab_id)
 
 def screen_browse_tabs(params: dict = None):
     clear()
@@ -300,7 +337,7 @@ def screen_browse_tabs(params: dict = None):
     with loading("Fetching tabs..."):
         r = api("get", "/tabs/", params=params or {})
     tabs = r.json()
-    render_tabs_table(tabs, title="All Tabs")
+    render_tabs_table(tabs, title="All Tabs[dim] · use arrow keys to navigate, Esc to return to menu")
     _tab_list_actions()
 
 def screen_search_tabs():
@@ -326,20 +363,20 @@ def screen_search_tabs():
     _tab_list_actions()
 
 def _tab_list_actions():
-    console.print()
-    console.print("[dim][V] View a a tab   [B] Back to menu[/]")
-    choice = Prompt.ask("[bold]>[/]", choices=["v","V","b","B"], default="b")
-    if choice.lower() == "v":
-        screen_view_tab_by_id()
-    else:
-        _back_to_menu()
+    # console.print()
+    # console.print("[dim][V] View a a tab   [B] Back to menu[/]")
+    # choice = Prompt.ask("[bold]>[/]", choices=["v","V","b","B"], default="b")
+    options = ["Back to menu"]
+    
+    get_bottom_menu_selection(options)
+    
+    _back_to_menu()
 
 
 
-def screen_view_tab_by_id():
+def screen_view_tab_by_id(tab_id):
     clear()
     show_banner()
-    tab_id = Prompt.ask("[cyan]Enter Tab ID[/]")
     with loading("Loading tab..."):
         r = api("get", f"/tabs/{tab_id}/")
     if r.status_code == 404:
@@ -394,26 +431,60 @@ def screen_view_tab(tab: dict):
         console.print("\n[dim]No comments yet. Be the first![/]\n")
 
     
-    actions = ["[B] Back"]
+    actions = ["Back"]
     if session["token"]:
-        actions += ["[C] Comment", "[F] Toggle favorite"]
+        actions += ["Comment", "Toggle favorite"]
         if tab["author"] == session["username"]:
-            actions += ["[E] Edit", "[D] Delete"]
+            actions += ["Edit", "Delete"]
 
-    console.print("[dim]" + "   ".join(actions) + "[/]")
-    valid = ["b","B"]
-    if session["token"]:
-        valid += ["c","C","f","F"]
-        if tab["author"] == session["username"]:
-            valid += ["e","E","d","D"]
+    # console.print("[dim]" + "   ".join(actions) + "[/]")
+    # valid = ["b","B"]
+    # if session["token"]:
+    #     valid += ["c","C","f","F"]
+    #     if tab["author"] == session["username"]:
+    #         valid += ["e","E","d","D"]
 
-    choice = Prompt.ask("[bold]>[/]", choices=valid, default="b")
+    # choice = Prompt.ask("[bold]>[/]", choices=valid, default="b")
+    choice = get_bottom_menu_selection(actions)
     c = choice.lower()
     if   c == "c": screen_add_comment(tab)
-    elif c == "f": action_toggle_favorite(tab)
+    elif c == "t": action_toggle_favorite(tab)
     elif c == "e": screen_edit_tab(tab)
     elif c == "d": action_delete_tab(tab)
-    else: _back_to_menu()
+    else: screen_browse_tabs()
+
+def generate_bottom_menu_panel(options, index):
+    menu_content = []
+
+    for i, option in enumerate(options):
+        if i == index:
+            menu_content.append(f" >> {option}")
+        else:
+            menu_content.append(f"    {option}")
+
+
+    
+
+    return "[dim]" + "   ".join(menu_content) + "[/]"
+
+def get_bottom_menu_selection(options):
+    index = 0
+
+    with Live(generate_bottom_menu_panel(options, index), auto_refresh=False) as live:
+        while True:
+            key = click.getchar()
+
+
+            if key == '\x1b[D' or key == 'H':
+                index = (index - 1) % len(options)
+            elif key == '\x1b[C' or key == 'P':
+                index = (index + 1) % len(options)
+            elif key in ('\r', '\n'):
+                break
+
+            live.update(generate_bottom_menu_panel(options, index), refresh=True)
+
+    return options[index][0]
 
 
 
@@ -591,8 +662,7 @@ def screen_profile():
         render_tabs_table(my_tabs, title="My Tabs")
 
     console.print()
-    console.print("[dim][B] Back to menu[/]")
-    Prompt.ask("[bold]>[/]", choices=["b","B"], default="b")
+    get_bottom_menu_selection(["Back to menu"])
     screen_main_menu()
 
 
