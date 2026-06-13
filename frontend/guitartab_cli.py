@@ -14,6 +14,7 @@ from rich.spinner import Spinner
 from rich import box
 import click
 import time
+import select
 
 BASE_URL = "http://127.0.0.1:8000/api"
 console = Console()
@@ -490,18 +491,23 @@ def get_bottom_menu_selection(options):
 
     return options[index][0]
 
-def generate_tab(tab_2d, tuning, row, column):
+def generate_tab(tab_2d, tuning, row, column, lines):
     tab_content = Text()
+    
 
 
     size = os.get_terminal_size()
-    for i in range(6):
-        tab_content.append(f"{tuning[(i+1) * -1]}|")
-        for c in range(int(size.columns / 2) - 2):
-            if column == i and row == c:
-                tab_content.append("-█")
-            else:
-                tab_content.append(f"-{tab_2d[i][c]}")
+    for line in range(lines):
+
+        for i in range(6):
+            tab_content.append(f"{tuning[(i+1) * -1]}|")
+            for c in range(int(size.columns / 2) - 2):
+                if column == i and row == c:
+                    tab_content.append(">", style="bold red")
+                    tab_content.append(f"{tab_2d[i][c]}")
+                else:
+                    tab_content.append(f"-{tab_2d[i][c]}")
+            tab_content.append("\n")
         tab_content.append("\n")
 
     return tab_content
@@ -511,6 +517,7 @@ def write_tab(tuning, tab_2d=None):
     row = 0
     column = 0
     size = os.get_terminal_size()
+    
 
     if tab_2d is None:
         tab_2d = [["-"] * size.columns for _ in range(6)]
@@ -533,7 +540,11 @@ def write_tab(tuning, tab_2d=None):
             elif key == '\x1b':
                 break
             elif key == '\x7f':
-                tab_2d[column][row] = "-"
+                if tab_2d[column][row] == "|":
+                    for string_index in range(6):
+                        tab_2d[string_index][row] = "-"
+                else:
+                    tab_2d[column][row] = "-"
             elif key == ' ':
                 for string_index in range(6):
                     tab_2d[string_index][row] = "|"
