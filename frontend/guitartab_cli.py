@@ -411,12 +411,16 @@ def screen_view_tab(tab: dict):
         console.print(f"\n[italic dim]{tab['description']}[/]\n")
 
     
-    console.print(Panel(
-        Text(tab["content"], style="bold green on grey7"),
-        title="[bold]Tab[/]",
-        border_style="grey30",
-        padding=(1, 2),
-    ))
+    # console.print(Panel(
+    #     Text(tab["content"], style="bold green on grey7"),
+    #     title="[bold]Tab[/]",
+    #     border_style="grey30",
+    #     padding=(1, 2),
+    # ))
+
+    tab_2d = extract_tab(tab["content"])
+
+    console.print(generate_tab(tab_2d, tab["tuning"], -1, -1))
 
     
     comments = tab.get("comments", [])
@@ -486,7 +490,65 @@ def get_bottom_menu_selection(options):
 
     return options[index][0]
 
+def generate_tab(tab_2d, tuning, row, column):
+    tab_content = Text()
 
+
+    size = os.get_terminal_size()
+    for i in range(6):
+        tab_content.append(f"{tuning[(i+1) * -1]}|")
+        for c in range(int(size.columns / 2) - 2):
+            if column == i and row == c:
+                tab_content.append("-█")
+            else:
+                tab_content.append(f"-{tab_2d[i][c]}")
+        tab_content.append("\n")
+
+    return tab_content
+
+
+def write_tab(tuning, tab_2d=None):
+    row = 0
+    column = 0
+    size = os.get_terminal_size()
+
+    if tab_2d is None:
+        tab_2d = [["-"] * size.columns for _ in range(6)]
+
+    with Live(generate_tab(tab_2d, tuning, row, column), auto_refresh=False) as live:
+        while True:
+            key = click.getchar()
+
+            if key == '\x1b[A':
+                if column != 0:
+                    column = (column - 1) % 6
+            elif key == '\x1b[B':
+                if column != 5:
+                    column = (column + 1) % 6
+            elif key == '\x1b[D':
+                if row != 0:
+                    row = (row - 1) % size.columns
+            elif key == '\x1b[C':
+                row = (row + 1) % size.columns
+            elif key == '\x1b':
+                break
+            elif key == '\x7f':
+                tab_2d[column][row] = "-"
+            elif key == ' ':
+                for string_index in range(6):
+                    tab_2d[string_index][row] = "|"
+            else:
+                tab_2d[column][row] = key
+            
+            live.update(generate_tab(tab_2d, tuning, row, column), refresh=True)
+    
+    return tab_2d
+
+def compress_tab(tab_2d):
+    return "\n".join(["".join(row) for row in tab_2d])
+
+def extract_tab(tab_string):
+    return [list(line) for line in tab_string.splitlines()]
 
 def screen_create_tab():
     clear()
@@ -497,7 +559,7 @@ def screen_create_tab():
     title       = Prompt.ask("[cyan]Title[/]")
     artist      = Prompt.ask("[cyan]Artist[/]")
     song        = Prompt.ask("[cyan]Song[/]")
-    tuning      = Prompt.ask("[cyan]Tuning[/]", default="Standard (EADGBe)")
+    tuning      = Prompt.ask("[cyan]Tuning[/]", default="EADGBe")
     difficulty  = Prompt.ask(
         "[cyan]Difficulty[/]",
         choices=["beginner","intermediate","advanced"],
@@ -505,14 +567,18 @@ def screen_create_tab():
     )
     description = Prompt.ask("[cyan]Description[/] [dim](optional)[/]", default="")
 
-    console.print("\n[bold cyan]Tab content[/] [dim](paste your tab, then type END on a new line)[/]\n")
-    lines = []
-    while True:
-        line = input()
-        if line.strip().upper() == "END":
-            break
-        lines.append(line)
-    content = "\n".join(lines)
+    # console.print("\n[bold cyan]Tab content[/] [dim](paste your tab, then type END on a new line)[/]\n")
+    # lines = []
+    # while True:
+    #     line = input()
+    #     if line.strip().upper() == "END":
+    #         break
+    #     lines.append(line)
+    # content = "\n".join(lines)
+
+    tab_2d = write_tab(tuning)
+
+    content = "\n".join(["".join(row) for row in tab_2d])
 
     payload = {
         "title": title, "artist": artist, "song": song,
@@ -550,14 +616,20 @@ def screen_edit_tab(tab: dict):
     )
     description = Prompt.ask("[cyan]Description[/]", default=tab.get("description",""))
 
-    console.print("\n[dim]Tab content (type END to finish, leave just END to keep existing):[/]\n")
-    lines = []
-    while True:
-        line = input()
-        if line.strip().upper() == "END":
-            break
-        lines.append(line)
-    content = "\n".join(lines) if lines else tab["content"]
+    # console.print("\n[dim]Tab content (type END to finish, leave just END to keep existing):[/]\n")
+    # lines = []
+    # while True:
+    #     line = input()
+    #     if line.strip().upper() == "END":
+    #         break
+    #     lines.append(line)
+    # content = "\n".join(lines) if lines else tab["content"]
+
+    tab_2d = [list(line) for line in tab["content"].splitlines()]
+
+    new_tab = write_tab(tab["tuning"], tab_2d)
+
+    content = content = "\n".join(["".join(row) for row in new_tab])
 
     payload = {
         "title": title, "artist": artist, "song": song,
