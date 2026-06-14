@@ -256,8 +256,9 @@ def generate_table_menu_panel(tabs: list, index):
     table.add_column("Author", style="dim magenta", ratio=2)
     table.add_column("<3", style="bold red", width=5, justify="center")
 
+    i = 0
     for tab in tabs:
-        if tab["id"] == index+1:
+        if i == index:
             arro = ">>  "
         else:
             arro = "    "
@@ -271,6 +272,7 @@ def generate_table_menu_panel(tabs: list, index):
             tab["author"],
             str(tab["favorite_count"]),
         )
+        i+=1
     
 
     return table
@@ -388,12 +390,6 @@ def screen_view_tab(tab: dict):
         console.print(f"\n[italic dim]{tab['description']}[/]\n")
 
     
-    # console.print(Panel(
-    #     Text(tab["content"], style="bold green on grey7"),
-    #     title="[bold]Tab[/]",
-    #     border_style="grey30",
-    #     padding=(1, 2),
-    # ))
 
     tab_2d = extract_tab(tab["content"])
 
@@ -473,7 +469,7 @@ def generate_tab(tab_2d, tuning, row, column):
                 tab_content.append(f"{tab_2d[i][c]}")
             else:
                 tab_content.append(f"-{tab_2d[i][c]}")
-        tab_content.append("\n")
+        tab_content.append("|\n")
 
     return tab_content
 
