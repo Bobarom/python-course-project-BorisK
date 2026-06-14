@@ -149,16 +149,7 @@ def screen_register():
 
 def screen_auth_menu():
     show_logo()
-    # console.print(Align.center(
-    #     Panel(
-    #         "[1] Login\n[2] Register\n[3] Browse tabs\n[Q] Quit",
-    #         title="[bold bright_blue]Menu[/]",
-    #         border_style="bright_blue",
-    #         width=36,
-    #     )
-    # ))
-    # console.print()
-    # choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","q","Q"], default="1")
+   
 
     options = [
         "Login",
@@ -217,22 +208,7 @@ def get_menu_selection(options):
 def screen_main_menu():
     show_logo()
     show_banner()
-    # console.print(Align.center(
-    #     Panel(
-    #         "[1] Browse tabs\n"
-    #         "[2] Search tabs\n"
-    #         "[3] View a tab\n"
-    #         "[4] Create a tab\n"
-    #         "[5] My favorites\n"
-    #         "[6] My profile\n"
-    #         "[Q] Logout",
-    #         title="[bold bright_blue]Main Menu[/]",
-    #         border_style="bright_blue",
-    #         width=36,
-    #     )
-    # ))
-    # console.print()
-    # choice = Prompt.ask("[bold]>[/]", choices=["1","2","3","4","5","6","q","Q"], default="1")
+    
 
     options = [
         "Browse tabs",
@@ -442,14 +418,7 @@ def screen_view_tab(tab: dict):
         if tab["author"] == session["username"]:
             actions += ["Edit", "Delete"]
 
-    # console.print("[dim]" + "   ".join(actions) + "[/]")
-    # valid = ["b","B"]
-    # if session["token"]:
-    #     valid += ["c","C","f","F"]
-    #     if tab["author"] == session["username"]:
-    #         valid += ["e","E","d","D"]
-
-    # choice = Prompt.ask("[bold]>[/]", choices=valid, default="b")
+    
     choice = get_bottom_menu_selection(actions)
     c = choice.lower()
     if   c == "c": screen_add_comment(tab)
@@ -572,15 +541,6 @@ def screen_create_tab():
     )
     description = Prompt.ask("[cyan]Description[/] [dim](optional)[/]", default="")
 
-    # console.print("\n[bold cyan]Tab content[/] [dim](paste your tab, then type END on a new line)[/]\n")
-    # lines = []
-    # while True:
-    #     line = input()
-    #     if line.strip().upper() == "END":
-    #         break
-    #     lines.append(line)
-    # content = "\n".join(lines)
-
     tab_2d = write_tab(tuning)
 
     content = "\n".join(["".join(row) for row in tab_2d])
@@ -621,14 +581,7 @@ def screen_edit_tab(tab: dict):
     )
     description = Prompt.ask("[cyan]Description[/]", default=tab.get("description",""))
 
-    # console.print("\n[dim]Tab content (type END to finish, leave just END to keep existing):[/]\n")
-    # lines = []
-    # while True:
-    #     line = input()
-    #     if line.strip().upper() == "END":
-    #         break
-    #     lines.append(line)
-    # content = "\n".join(lines) if lines else tab["content"]
+    
 
     tab_2d = [list(line) for line in tab["content"].splitlines()]
 
@@ -685,7 +638,7 @@ def screen_add_comment(tab: dict):
         console.print(f"\n[red]✗[/] {r.json()}\n")
     time.sleep(1)
 
-    # Reload tab to show new comment
+    
     r2 = api("get", f"/tabs/{tab['id']}/")
     screen_view_tab(r2.json())
 
